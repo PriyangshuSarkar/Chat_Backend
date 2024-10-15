@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Address {
+  id         String    @id
+  userId     String?   @unique
+  businessId String?   @unique
+  serviceId  String?   @unique
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime
+  Business   Business? @relation(fields: [businessId], references: [id])
+  Service    Service?  @relation(fields: [serviceId], references: [id])
+  User       User?     @relation(fields: [userId], references: [id])
+  City       City[]
+  Country    Country[]
+  Pincode    Pincode[]
+  State      State[]
+  Street     Street[]
+}
+
+model Admin {
+  id        String    @id
+  name      String
+  email     String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime
+  deletedAt DateTime?
+}
+
+model Booking {
+  id        String    @id
+  date      DateTime
+  userId    String
+  serviceId String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  updatedAt DateTime
+  Service   Service   @relation(fields: [serviceId], references: [id])
+  User      User      @relation(fields: [userId], references: [id])
+}
+
+model Business {
+  id                   String                @id
+  name                 String
+  email                String                @unique
+  password             String
+  salt                 String
+  isVerified           Boolean               @default(false)
+  phone                String?
+  type                 String?
+  website              String?
+  otp                  String?
+  otpExpiresAt         DateTime?
+  companyLogo          String?
+  companyImages        String[]
+  latitude             Float?
+  longitude            Float?
+  addressId            String?               @unique
+  subscriptionId       String?
+  subscriptionExpire   DateTime?
+  averageRating        Float?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime
+  deletedAt            DateTime?
+  paymentVerification  Boolean?              @default(false)
+  gstNumber            Int?
+  Address              Address?
+  BusinessSubscription BusinessSubscription? @relation(fields: [subscriptionId], references: [id])
+  Review               Review[]
+  Service              Service[]
+  Chat                 Chat[]
+}
+
+model BusinessSubscription {
+  id          String     @id
+  name        String
+  description String?
+  price       Float
+  duration    Int
+  features    String[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  deletedAt   DateTime?
+  Business    Business[]
+}
+
+model Category {
+  id          String        @id
+  name        String        @unique
+  createdAt   DateTime      @default(now())
+  deletedAt   DateTime?
+  updatedAt   DateTime
+  Subcategory Subcategory[]
+}
+
+model City {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  Address Address[]
+}
+
+model Country {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  Address Address[]
+}
+
+model Facility {
+  id        String    @id
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  updatedAt DateTime
+  Service   Service[]
+}
+
+model Offer {
+  id           String    @id
+  title        String
+  description  String?
+  discountRate Float
+  startDate    DateTime
+  endDate      DateTime
+  serviceId    String
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  deletedAt    DateTime?
+  Service      Service   @relation(fields: [serviceId], references: [id])
+}
+
+model Pincode {
+  id      Int       @id @default(autoincrement())
+  code    String    @unique
+  Address Address[]
+}
+
+model Review {
+  id         String    @id
+  rating     Int
+  comment    String?
+  serviceId  String
+  businessId String?
+  userId     String
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime
+  Business   Business? @relation(fields: [businessId], references: [id])
+  Service    Service   @relation(fields: [serviceId], references: [id])
+  User       User      @relation(fields: [userId], references: [id])
+}
+
+model Service {
+  id              String      @id
+  name            String
+  overview        String?
+  price           Float
+  discountedPrice Float?
+  businessId      String
+  subcategoryId   String
+  averageRating   Float?
+  addressId       String?     @unique
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime
+  deletedAt       DateTime?
+  serviceImages   String[]
+  Address         Address?
+  Booking         Booking[]
+  Offer           Offer[]
+  Review          Review[]
+  Business        Business    @relation(fields: [businessId], references: [id])
+  Subcategory     Subcategory @relation(fields: [subcategoryId], references: [id])
+  Facility        Facility[]
+  Tag             Tag[]
+}
+
+model State {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  Address Address[]
+}
+
+model Street {
+  id      Int       @id @default(autoincrement())
+  name    String    @unique
+  Address Address[]
+}
+
+model Subcategory {
+  id         String    @id
+  name       String    @unique
+  categoryId String
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime
+  Service    Service[]
+  Category   Category  @relation(fields: [categoryId], references: [id])
+}
+
+model Tag {
+  id        String    @id
+  name      String    @unique
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  updatedAt DateTime
+  Service   Service[]
+}
+
+model User {
+  id                  String            @id
+  name                String
+  email               String            @unique
+  password            String
+  salt                String
+  isVerified          Boolean           @default(false)
+  phone               String?
+  hideDetails         Boolean           @default(true)
+  otp                 String?
+  otpExpiresAt        DateTime?
+  avatar              String?
+  addressId           String?           @unique
+  subscriptionId      String?
+  subscriptionExpire  DateTime?
+  paymentVerification Boolean?          @default(false)
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime
+  deletedAt           DateTime?
+  Address             Address?
+  Booking             Booking[]
+  Review              Review[]
+  UserSubscription    UserSubscription? @relation(fields: [subscriptionId], references: [id])
+  Chat                Chat[]
+}
+
+model UserSubscription {
+  id          String    @id
+  name        String
+  description String?
+  price       Float
+  duration    Int
+  features    String[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime
+  deletedAt   DateTime?
+  User        User[]
+}
+
+model Chat {
+  id         String    @id @default(uuid())
+  userId     String
+  businessId String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  deletedAt  DateTime?
+  User       User      @relation(fields: [userId], references: [id])
+  Business   Business  @relation(fields: [businessId], references: [id])
+  Messages   Message[]
+
+  @@unique([userId, businessId])
+}
+
+model Message {
+  id         String     @id @default(uuid())
+  content    String
+  senderType SenderType
+  chatId     String
+  createdAt  DateTime   @default(now())
+  readAt     DateTime?
+  Chat       Chat       @relation(fields: [chatId], references: [id])
+}
+
+enum SenderType {
+  USER
+  BUSINESS
+}
