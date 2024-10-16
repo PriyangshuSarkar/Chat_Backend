@@ -4,9 +4,8 @@ import http from "http";
 import { dbConnect, prisma } from "./utils/dbConnect";
 import { Server } from "socket.io";
 import morgan from "morgan";
-import { errorHandler } from "./middlewares/errorHandler";
-import routers from "./routes";
 import cookieParser from "cookie-parser";
+import { chatSockets } from "./sockets/chatSocket";
 
 export const app: Express = express();
 export const server = http.createServer(app);
@@ -19,14 +18,13 @@ export const io = new Server(server, {
   },
 });
 
+chatSockets();
+
 app.use(morgan("dev"));
 app.use(json());
 app.use(cookieParser());
-app.use("/api", routers);
 
 dbConnect();
-
-app.use(errorHandler);
 
 const port = process.env.PORT;
 

@@ -29,6 +29,12 @@
     "noUnusedParameters": false,
     "noPropertyAccessFromIndexSignature": false
   },
-  "include": ["src/**/*", "src/types/express.d.ts"],
-  "exclude": ["node_modules", "dist"]
+  "include": [
+    "src/**/*",
+    "src/types/express.d.ts",
+    "un_used_code/businessChat.ts",
+    "un_used_code/index.ts",
+    "un_used_code/userChat.ts"
+  ],
+  "exclude": ["node_modules", "dist", "un_used_code"]
 }
