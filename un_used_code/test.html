@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Chat Application</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        padding: 20px;
+        border: 1px solid #ccc;
+      }
+      #chat {
+        display: none;
+        margin-top: 20px;
+      }
+      .message {
+        margin: 5px 0;
+      }
+      .message-user {
+        color: blue;
+      }
+      .message-business {
+        color: green;
+      }
+      #error-message {
+        color: red;
+        margin: 10px 0;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Chat Application</h1>
+    <div id="login">
+      <label for="token">JWT Token:</label>
+      <input type="text" id="token" required />
+      <label for="partnerId">Partner ID:</label>
+      <input type="text" id="partnerId" required />
+      <button id="joinBtn">Join Chat</button>
+    </div>
+    <div id="error-message"></div>
+    <div id="chat">
+      <h2>Chat Room</h2>
+      <div id="messages"></div>
+      <input
+        type="text"
+        id="messageInput"
+        placeholder="Type a message..."
+        disabled
+      />
+      <button id="sendMessageBtn" disabled>Send</button>
+    </div>
+
+    <script>
+      let socket;
+      let currentChatId;
+
+      document.getElementById("joinBtn").addEventListener("click", () => {
+        const token = document.getElementById("token").value;
+        const partnerId = document.getElementById("partnerId").value;
+
+        // Establish the socket connection with the JWT token
+        socket = io("http://localhost:8000", {
+          auth: {
+            token: token,
+          },
+          withCredentials: true,
+        });
+
+        console.log(socket);
+
+        socket.on("connect", () => {
+          console.log("Connected to server");
+          socket.emit("join_chat", partnerId);
+        });
+
+        socket.on("chat_joined", (chat) => {
+          console.log("Joined chat:", chat);
+          currentChatId = chat.id;
+          document.getElementById("login").style.display = "none";
+          document.getElementById("chat").style.display = "block";
+          document.getElementById("messageInput").disabled = false;
+          document.getElementById("sendMessageBtn").disabled = false;
+          document.getElementById("error-message").style.display = "none";
+
+          // Fetch initial messages
+          socket.emit("get_messages", currentChatId, 1, 20);
+        });
+
+        socket.on("new_message", (message) => {
+          displayMessage(message);
+          socket.emit("mark_as_read", message.id);
+        });
+
+        socket.on("error", (data) => {
+          console.error("Socket error:", data.message);
+          const errorMessageDiv = document.getElementById("error-message");
+          errorMessageDiv.textContent = data.message;
+          errorMessageDiv.style.display = "block";
+        });
+
+        socket.on("messages", (messages) => {
+          const messagesDiv = document.getElementById("messages");
+          messagesDiv.innerHTML = "";
+          messages.forEach(displayMessage);
+          messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        });
+
+        socket.on("message_read", (message) => {
+          console.log("Message marked as read:", message);
+        });
+      });
+
+      document
+        .getElementById("sendMessageBtn")
+        .addEventListener("click", sendMessage);
+      document
+        .getElementById("messageInput")
+        .addEventListener("keypress", (event) => {
+          if (event.key === "Enter") {
+            sendMessage();
+          }
+        });
+
+      function sendMessage() {
+        const content = document.getElementById("messageInput").value;
+        if (content.trim()) {
+          socket.emit("send_message", currentChatId, content);
+          document.getElementById("messageInput").value = "";
+        } else {
+          alert("Message cannot be empty!");
+        }
+      }
+
+      function displayMessage(message) {
+        const messagesDiv = document.getElementById("messages");
+        const messageDiv = document.createElement("div");
+        messageDiv.className = `message message-${message.senderType.toLowerCase()}`;
+        messageDiv.textContent = `${message.senderType}: ${message.content}`;
+        messagesDiv.appendChild(messageDiv);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      }
+    </script>
+  </body>
+</html>

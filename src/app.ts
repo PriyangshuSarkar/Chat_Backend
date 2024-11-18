@@ -11,7 +11,7 @@ export const app: Express = express();
 export const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: "*", // You can specify an array of allowed origins here
+    origin: "http://127.0.0.1:3000", // You can specify an array of allowed origins here
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,
@@ -29,5 +29,5 @@ dbConnect();
 const port = process.env.PORT;
 
 server.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
 });

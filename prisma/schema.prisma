@@ -7,24 +7,6 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Address {
-  id         String    @id
-  userId     String?   @unique
-  businessId String?   @unique
-  serviceId  String?   @unique
-  createdAt  DateTime  @default(now())
-  deletedAt  DateTime?
-  updatedAt  DateTime
-  Business   Business? @relation(fields: [businessId], references: [id])
-  Service    Service?  @relation(fields: [serviceId], references: [id])
-  User       User?     @relation(fields: [userId], references: [id])
-  City       City[]
-  Country    Country[]
-  Pincode    Pincode[]
-  State      State[]
-  Street     Street[]
-}
-
 model Admin {
   id        String    @id
   name      String
@@ -36,207 +18,155 @@ model Admin {
 }
 
 model Booking {
-  id        String    @id
-  date      DateTime
-  userId    String
-  serviceId String
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-  updatedAt DateTime
-  Service   Service   @relation(fields: [serviceId], references: [id])
-  User      User      @relation(fields: [userId], references: [id])
+  id         String    @id
+  date       DateTime
+  userId     String
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime
+  businessId String
+  Business   Business  @relation(fields: [businessId], references: [id])
+  User       User      @relation(fields: [userId], references: [id])
 }
 
 model Business {
-  id                   String                @id
-  name                 String
-  email                String                @unique
-  password             String
-  salt                 String
-  isVerified           Boolean               @default(false)
-  phone                String?
-  type                 String?
-  website              String?
-  otp                  String?
-  otpExpiresAt         DateTime?
-  companyLogo          String?
-  companyImages        String[]
-  latitude             Float?
-  longitude            Float?
-  addressId            String?               @unique
-  subscriptionId       String?
-  subscriptionExpire   DateTime?
-  averageRating        Float?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime
-  deletedAt            DateTime?
-  paymentVerification  Boolean?              @default(false)
-  gstNumber            Int?
-  Address              Address?
-  BusinessSubscription BusinessSubscription? @relation(fields: [subscriptionId], references: [id])
-  Review               Review[]
-  Service              Service[]
-  Chat                 Chat[]
+  id                          String                        @id
+  name                        String?
+  slug                        String?                       @unique
+  password                    String?
+  salt                        String?
+  isBusinessVerified          Boolean                       @default(false)
+  type                        BusinessType                  @default(INDIVIDUAL)
+  subscriptionId              String?
+  subscriptionExpire          DateTime?
+  averageRating               Float?
+  reviewCount                 Int                           @default(0)
+  isListed                    Boolean                       @default(false)
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime
+  deletedAt                   DateTime?
+  paymentVerification         Boolean                       @default(false)
+  additionalContacts          String[]
+  price                       Float?
+  Booking                     Booking[]
+  BusinessSubscription        BusinessSubscription?         @relation(fields: [subscriptionId], references: [id])
+  BusinessDetails             BusinessDetails?
+  BusinessPrimaryContact      BusinessPrimaryContact[]
+  BusinessSupportingDocuments BusinessSupportingDocuments[]
+  Chat                        Chat[]
+  Review                      Review[]
+
+  @@index([averageRating])
+  @@index([isBusinessVerified])
+  @@index([isListed])
+  @@index([name])
+  @@index([reviewCount])
+  @@index([subscriptionId])
 }
 
 model BusinessSubscription {
-  id          String     @id
+  id          String       @id
   name        String
   description String?
+  type        BusinessType
   price       Float
   duration    Int
   features    String[]
-  createdAt   DateTime   @default(now())
+  tierLevel   Int          @default(1)
+  createdAt   DateTime     @default(now())
   updatedAt   DateTime
   deletedAt   DateTime?
   Business    Business[]
 }
 
 model Category {
-  id          String        @id
-  name        String        @unique
-  createdAt   DateTime      @default(now())
-  deletedAt   DateTime?
-  updatedAt   DateTime
-  Subcategory Subcategory[]
+  id              String            @id
+  name            String
+  slug            String?           @unique
+  createdAt       DateTime          @default(now())
+  deletedAt       DateTime?
+  categoryImage   String?
+  updatedAt       DateTime
+  BusinessDetails BusinessDetails[]
 }
 
 model City {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  Address Address[]
+  id      String    @id
+  name    String
+  slug    String?   @unique
+  stateId String
+  State   State     @relation(fields: [stateId], references: [id])
+  Pincode Pincode[]
 }
 
 model Country {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  Address Address[]
-}
-
-model Facility {
-  id        String    @id
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-  updatedAt DateTime
-  Service   Service[]
-}
-
-model Offer {
-  id           String    @id
-  title        String
-  description  String?
-  discountRate Float
-  startDate    DateTime
-  endDate      DateTime
-  serviceId    String
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime
-  deletedAt    DateTime?
-  Service      Service   @relation(fields: [serviceId], references: [id])
+  id    String  @id
+  name  String
+  slug  String? @unique
+  State State[]
 }
 
 model Pincode {
-  id      Int       @id @default(autoincrement())
-  code    String    @unique
-  Address Address[]
+  id     String  @id
+  code   String  @unique
+  slug   String? @unique
+  cityId String
+  City   City    @relation(fields: [cityId], references: [id])
 }
 
 model Review {
   id         String    @id
   rating     Int
   comment    String?
-  serviceId  String
   businessId String?
   userId     String
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
   updatedAt  DateTime
   Business   Business? @relation(fields: [businessId], references: [id])
-  Service    Service   @relation(fields: [serviceId], references: [id])
   User       User      @relation(fields: [userId], references: [id])
 }
 
-model Service {
-  id              String      @id
-  name            String
-  overview        String?
-  price           Float
-  discountedPrice Float?
-  businessId      String
-  subcategoryId   String
-  averageRating   Float?
-  addressId       String?     @unique
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime
-  deletedAt       DateTime?
-  serviceImages   String[]
-  Address         Address?
-  Booking         Booking[]
-  Offer           Offer[]
-  Review          Review[]
-  Business        Business    @relation(fields: [businessId], references: [id])
-  Subcategory     Subcategory @relation(fields: [subcategoryId], references: [id])
-  Facility        Facility[]
-  Tag             Tag[]
-}
-
 model State {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  Address Address[]
-}
-
-model Street {
-  id      Int       @id @default(autoincrement())
-  name    String    @unique
-  Address Address[]
-}
-
-model Subcategory {
-  id         String    @id
-  name       String    @unique
-  categoryId String
-  createdAt  DateTime  @default(now())
-  deletedAt  DateTime?
-  updatedAt  DateTime
-  Service    Service[]
-  Category   Category  @relation(fields: [categoryId], references: [id])
+  id        String  @id
+  name      String
+  slug      String? @unique
+  countryId String
+  City      City[]
+  Country   Country @relation(fields: [countryId], references: [id])
 }
 
 model Tag {
-  id        String    @id
-  name      String    @unique
-  createdAt DateTime  @default(now())
-  deletedAt DateTime?
-  updatedAt DateTime
-  Service   Service[]
+  id              String            @id
+  name            String            @unique
+  createdAt       DateTime          @default(now())
+  deletedAt       DateTime?
+  updatedAt       DateTime
+  BusinessDetails BusinessDetails[]
 }
 
 model User {
   id                  String            @id
   name                String
-  email               String            @unique
-  password            String
-  salt                String
-  isVerified          Boolean           @default(false)
-  phone               String?
+  slug                String?           @unique
+  password            String?
+  salt                String?
   hideDetails         Boolean           @default(true)
-  otp                 String?
-  otpExpiresAt        DateTime?
   avatar              String?
-  addressId           String?           @unique
   subscriptionId      String?
   subscriptionExpire  DateTime?
-  paymentVerification Boolean?          @default(false)
+  paymentVerification Boolean           @default(false)
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
   deletedAt           DateTime?
-  Address             Address?
   Booking             Booking[]
+  Chat                Chat[]
   Review              Review[]
   UserSubscription    UserSubscription? @relation(fields: [subscriptionId], references: [id])
-  Chat                Chat[]
+  UserAddress         UserAddress[]
+  UserContact         UserContact[]
+
+  @@index([subscriptionId])
 }
 
 model UserSubscription {
@@ -259,8 +189,8 @@ model Chat {
   createdAt  DateTime  @default(now())
   updatedAt  DateTime  @updatedAt
   deletedAt  DateTime?
-  User       User      @relation(fields: [userId], references: [id])
   Business   Business  @relation(fields: [businessId], references: [id])
+  User       User      @relation(fields: [userId], references: [id])
   Messages   Message[]
 
   @@unique([userId, businessId])
@@ -273,10 +203,187 @@ model Message {
   chatId     String
   createdAt  DateTime   @default(now())
   readAt     DateTime?
+  fileType   String?
+  fileUrl    String?
   Chat       Chat       @relation(fields: [chatId], references: [id])
+}
+
+model BusinessAddress {
+  id                String           @id
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  street            String
+  city              String
+  country           String
+  pincode           String
+  state             String
+  businessDetailsId String?
+  order             Int?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
+}
+
+model BusinessDetails {
+  id                 String            @id
+  registrationNumber String?
+  license            String?
+  experience         Int?
+  teamSize           Int?
+  description        String?
+  latitude           Float?
+  longitude          Float?
+  gstNumber          String?
+  categoryId         String?
+  createdAt          DateTime          @default(now())
+  updatedAt          DateTime
+  deletedAt          DateTime?
+  degree             String[]
+  logo               String?
+  BusinessAddress    BusinessAddress[]
+  Category           Category?         @relation(fields: [categoryId], references: [id])
+  Business           Business          @relation(fields: [id], references: [id])
+  BusinessImage      BusinessImage[]
+  BusinessWebsite    BusinessWebsite[]
+  Court              Court[]
+  Language           Language[]
+  Proficiency        Proficiency[]
+  Tag                Tag[]
+
+  @@index([categoryId])
+}
+
+model BusinessImage {
+  id                String           @id
+  url               String
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  businessDetailsId String?
+  order             Int?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
+}
+
+model BusinessPrimaryContact {
+  id           String      @id
+  businessId   String
+  type         ContactType
+  value        String      @unique
+  isVerified   Boolean     @default(false)
+  isPrimary    Boolean     @default(false)
+  verifiedAt   DateTime?
+  otp          String?
+  otpExpiresAt DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime
+  deletedAt    DateTime?
+  order        Int?
+  Business     Business    @relation(fields: [businessId], references: [id])
+
+  @@unique([businessId, type, isPrimary])
+  @@index([type])
+  @@index([value])
+}
+
+model BusinessSupportingDocuments {
+  id         String    @id
+  businessId String
+  type       String
+  url        String
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime
+  deletedAt  DateTime?
+  Business   Business  @relation(fields: [businessId], references: [id])
+}
+
+model BusinessWebsite {
+  id                String           @id
+  type              String
+  url               String
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  businessDetailsId String?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
+}
+
+model Court {
+  id              String            @id
+  name            String            @unique
+  slug            String?           @unique
+  createdAt       DateTime          @default(now())
+  deletedAt       DateTime?
+  updatedAt       DateTime
+  BusinessDetails BusinessDetails[]
+}
+
+model Language {
+  id              String            @id
+  name            String            @unique
+  slug            String?           @unique
+  createdAt       DateTime          @default(now())
+  deletedAt       DateTime?
+  updatedAt       DateTime
+  BusinessDetails BusinessDetails[]
+}
+
+model Proficiency {
+  id              String            @id
+  name            String            @unique
+  slug            String?           @unique
+  createdAt       DateTime          @default(now())
+  deletedAt       DateTime?
+  updatedAt       DateTime
+  BusinessDetails BusinessDetails[]
+}
+
+model UserAddress {
+  id        String    @id
+  userId    String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  updatedAt DateTime
+  street    String
+  city      String
+  country   String
+  pincode   String
+  state     String
+  order     Int?
+  User      User      @relation(fields: [userId], references: [id])
+}
+
+model UserContact {
+  id           String      @id
+  userId       String
+  type         ContactType
+  value        String      @unique
+  isVerified   Boolean     @default(false)
+  isPrimary    Boolean     @default(false)
+  verifiedAt   DateTime?
+  otp          String?
+  otpExpiresAt DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime
+  deletedAt    DateTime?
+  order        Int?
+  User         User        @relation(fields: [userId], references: [id])
+
+  @@unique([userId, type, isPrimary])
+  @@index([type])
+  @@index([userId])
+  @@index([value])
 }
 
 enum SenderType {
   USER
   BUSINESS
+}
+
+enum BusinessType {
+  INDIVIDUAL
+  FIRM
+}
+
+enum ContactType {
+  EMAIL
+  PHONE
 }

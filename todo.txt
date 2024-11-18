@@ -1,2 +1,0 @@
-1. first search will be location based
-2. next all the results will be overall
