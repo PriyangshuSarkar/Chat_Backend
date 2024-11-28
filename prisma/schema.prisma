@@ -21,10 +21,10 @@ model Booking {
   id         String    @id
   date       DateTime
   userId     String
+  businessId String
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
   updatedAt  DateTime
-  businessId String
   Business   Business  @relation(fields: [businessId], references: [id])
   User       User      @relation(fields: [userId], references: [id])
 }
@@ -33,6 +33,7 @@ model Business {
   id                          String                        @id
   name                        String?
   slug                        String?                       @unique
+  additionalContacts          String[]
   password                    String?
   salt                        String?
   isBusinessVerified          Boolean                       @default(false)
@@ -42,12 +43,13 @@ model Business {
   averageRating               Float?
   reviewCount                 Int                           @default(0)
   isListed                    Boolean                       @default(false)
+  isBlocked                   Boolean                       @default(false)
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime
   deletedAt                   DateTime?
   paymentVerification         Boolean                       @default(false)
-  additionalContacts          String[]
   price                       Float?
+  razorpay_order_id           String?                       @unique
   Booking                     Booking[]
   BusinessSubscription        BusinessSubscription?         @relation(fields: [subscriptionId], references: [id])
   BusinessDetails             BusinessDetails?
@@ -142,7 +144,7 @@ model Tag {
   createdAt       DateTime          @default(now())
   deletedAt       DateTime?
   updatedAt       DateTime
-  BusinessDetails BusinessDetails[]
+  BusinessDetails BusinessDetails[] @relation("BusinessDetailsToTag")
 }
 
 model User {
@@ -152,6 +154,7 @@ model User {
   password            String?
   salt                String?
   hideDetails         Boolean           @default(true)
+  isBlocked           Boolean           @default(false)
   avatar              String?
   subscriptionId      String?
   subscriptionExpire  DateTime?
@@ -159,6 +162,7 @@ model User {
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
   deletedAt           DateTime?
+  razorpay_order_id   String?           @unique
   Booking             Booking[]
   Chat                Chat[]
   Review              Review[]
@@ -210,57 +214,48 @@ model Message {
 
 model BusinessAddress {
   id                String           @id
+  businessDetailsId String?
   createdAt         DateTime         @default(now())
   deletedAt         DateTime?
   updatedAt         DateTime
+  order             Int?
   street            String
   city              String
   country           String
   pincode           String
   state             String
-  businessDetailsId String?
-  order             Int?
   BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
 }
 
 model BusinessDetails {
-  id                 String            @id
-  registrationNumber String?
-  license            String?
-  experience         Int?
-  teamSize           Int?
-  description        String?
-  latitude           Float?
-  longitude          Float?
-  gstNumber          String?
-  categoryId         String?
-  createdAt          DateTime          @default(now())
-  updatedAt          DateTime
-  deletedAt          DateTime?
-  degree             String[]
-  logo               String?
-  BusinessAddress    BusinessAddress[]
-  Category           Category?         @relation(fields: [categoryId], references: [id])
-  Business           Business          @relation(fields: [id], references: [id])
-  BusinessImage      BusinessImage[]
-  BusinessWebsite    BusinessWebsite[]
-  Court              Court[]
-  Language           Language[]
-  Proficiency        Proficiency[]
-  Tag                Tag[]
+  id                          String                        @id
+  registrationNumber          String?
+  license                     String?
+  experience                  Int?
+  teamSize                    Int?
+  description                 String?
+  latitude                    Float?
+  longitude                   Float?
+  degree                      String[]
+  gstNumber                   String?
+  categoryId                  String?
+  logo                        String?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime
+  deletedAt                   DateTime?
+  BusinessAdBannerImage       BusinessAdBannerImage[]
+  BusinessAddress             BusinessAddress[]
+  BusinessCoverImage          BusinessCoverImage[]
+  Category                    Category?                     @relation(fields: [categoryId], references: [id])
+  Business                    Business                      @relation(fields: [id], references: [id])
+  BusinessMobileAdBannerImage BusinessMobileAdBannerImage[]
+  BusinessWebsite             BusinessWebsite[]
+  Court                       Court[]                       @relation("BusinessDetailsToCourt")
+  Language                    Language[]                    @relation("BusinessDetailsToLanguage")
+  Proficiency                 Proficiency[]                 @relation("BusinessDetailsToProficiency")
+  Tag                         Tag[]                         @relation("BusinessDetailsToTag")
 
   @@index([categoryId])
-}
-
-model BusinessImage {
-  id                String           @id
-  url               String
-  createdAt         DateTime         @default(now())
-  deletedAt         DateTime?
-  updatedAt         DateTime
-  businessDetailsId String?
-  order             Int?
-  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
 }
 
 model BusinessPrimaryContact {
@@ -270,13 +265,13 @@ model BusinessPrimaryContact {
   value        String      @unique
   isVerified   Boolean     @default(false)
   isPrimary    Boolean     @default(false)
+  order        Int?
   verifiedAt   DateTime?
   otp          String?
   otpExpiresAt DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime
   deletedAt    DateTime?
-  order        Int?
   Business     Business    @relation(fields: [businessId], references: [id])
 
   @@unique([businessId, type, isPrimary])
@@ -313,7 +308,7 @@ model Court {
   createdAt       DateTime          @default(now())
   deletedAt       DateTime?
   updatedAt       DateTime
-  BusinessDetails BusinessDetails[]
+  BusinessDetails BusinessDetails[] @relation("BusinessDetailsToCourt")
 }
 
 model Language {
@@ -323,7 +318,7 @@ model Language {
   createdAt       DateTime          @default(now())
   deletedAt       DateTime?
   updatedAt       DateTime
-  BusinessDetails BusinessDetails[]
+  BusinessDetails BusinessDetails[] @relation("BusinessDetailsToLanguage")
 }
 
 model Proficiency {
@@ -333,7 +328,7 @@ model Proficiency {
   createdAt       DateTime          @default(now())
   deletedAt       DateTime?
   updatedAt       DateTime
-  BusinessDetails BusinessDetails[]
+  BusinessDetails BusinessDetails[] @relation("BusinessDetailsToProficiency")
 }
 
 model UserAddress {
@@ -342,12 +337,12 @@ model UserAddress {
   createdAt DateTime  @default(now())
   deletedAt DateTime?
   updatedAt DateTime
+  order     Int?
   street    String
   city      String
   country   String
   pincode   String
   state     String
-  order     Int?
   User      User      @relation(fields: [userId], references: [id])
 }
 
@@ -358,19 +353,52 @@ model UserContact {
   value        String      @unique
   isVerified   Boolean     @default(false)
   isPrimary    Boolean     @default(false)
+  order        Int?
   verifiedAt   DateTime?
   otp          String?
   otpExpiresAt DateTime?
   createdAt    DateTime    @default(now())
   updatedAt    DateTime
   deletedAt    DateTime?
-  order        Int?
   User         User        @relation(fields: [userId], references: [id])
 
   @@unique([userId, type, isPrimary])
   @@index([type])
   @@index([userId])
   @@index([value])
+}
+
+model BusinessAdBannerImage {
+  id                String           @id
+  url               String
+  order             Int?
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  businessDetailsId String?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
+}
+
+model BusinessCoverImage {
+  id                String           @id
+  url               String
+  order             Int?
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  businessDetailsId String?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
+}
+
+model BusinessMobileAdBannerImage {
+  id                String           @id
+  url               String
+  order             Int?
+  createdAt         DateTime         @default(now())
+  deletedAt         DateTime?
+  updatedAt         DateTime
+  businessDetailsId String?
+  BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
 }
 
 enum SenderType {

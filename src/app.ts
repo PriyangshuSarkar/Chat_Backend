@@ -29,5 +29,5 @@ dbConnect();
 const port = process.env.PORT;
 
 server.listen(port, () => {
-  console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
+  console.log(`🚀 Server ready at http://127.0.0.1:${port}`);
 });

@@ -1,40 +1,32 @@
 {
   "compilerOptions": {
-    // Enable latest features
-    "lib": ["ESNext", "DOM"],
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleDetection": "force",
-    "jsx": "react-jsx",
-    "allowJs": true,
-
-    // Bundler mode
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    // "verbatimModuleSyntax": true,
-    "noEmit": true,
-
-    // Enable output
-    "outDir": "./dist",
+    "module": "CommonJS", // Changed to CommonJS for better compatibility
+    "moduleResolution": "node",
     "rootDir": "./src",
-    "esModuleInterop": true,
-
-    // Best practices
+    "outDir": "./dist",
+    "removeComments": true,
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
     "noFallthroughCasesInSwitch": true,
-
-    // Some stricter flags (disabled by default)
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noPropertyAccessFromIndexSignature": false
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "strictBindCallApply": true,
+    "jsx": "react-jsx",
+    "lib": ["ESNext", "DOM"],
+    "noEmit": false // Changed to false to enable emission of compiled files
   },
-  "include": [
-    "src/**/*",
-    "src/types/express.d.ts",
-    "un_used_code/businessChat.ts",
-    "un_used_code/index.ts",
-    "un_used_code/userChat.ts"
-  ],
-  "exclude": ["node_modules", "dist", "un_used_code"]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist", "un_Used_Code"],
+  "ts-node": {
+    "esm": true,
+    "experimentalSpecifierResolution": "node"
+  }
 }

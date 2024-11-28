@@ -1,6 +1,5 @@
 import type { Socket } from "socket.io";
 import { prisma } from "../utils/dbConnect";
-import { deleteFromCloudinary, uploadToCloudinary } from "../utils/cloudinary";
 import {
   GetMessagesSchema,
   GetMessagesType,
@@ -11,6 +10,7 @@ import {
   SendMessageSchema,
   SendMessageType,
 } from "../types/chatType";
+import { deleteFromSpaces, uploadToSpaces } from "../utils/bucket";
 
 export const joinChat = async (socket: Socket, input: JoinChatType) => {
   const { id: userId, type: userType } = socket.data.user;
@@ -49,7 +49,11 @@ export const sendMessage = async (socket: Socket, input: SendMessageType) => {
   if (file) {
     try {
       // Upload file to Cloudinary
-      fileUrl = (await uploadToCloudinary(file, "chat_attachments")) as string;
+      fileUrl = (await uploadToSpaces(
+        file,
+        "chat_attachments",
+        null
+      )) as string;
       fileType = file.mimetype.startsWith("image/") ? "IMAGE" : "FILE";
     } catch (error) {
       console.error("File upload failed:", error);
@@ -69,7 +73,7 @@ export const sendMessage = async (socket: Socket, input: SendMessageType) => {
 
   if (!message) {
     if (fileUrl) {
-      await deleteFromCloudinary(fileUrl).catch(console.error);
+      await deleteFromSpaces(fileUrl).catch(console.error);
     }
     throw new Error("Message could not be created!");
   }
