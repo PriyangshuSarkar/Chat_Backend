@@ -11,7 +11,7 @@ export const app: Express = express();
 export const server = http.createServer(app);
 export const io = new Server(server, {
   cors: {
-    origin: "http://127.0.0.1:3000", // You can specify an array of allowed origins here
+    origin: "*", // You can specify an array of allowed origins here
     methods: ["GET", "POST"],
     allowedHeaders: ["Content-Type"],
     credentials: true,

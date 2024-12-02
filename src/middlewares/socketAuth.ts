@@ -3,12 +3,15 @@ import { prisma } from "../utils/dbConnect";
 import type { Socket } from "socket.io";
 
 export const socketAuth = async (socket: Socket, next: any) => {
-  const token = socket.handshake.auth.token;
+  const token = socket.handshake.headers.cookie;
+
+  console.log(token);
   if (!token) {
     return next(new Error("Authentication error: Token not provided"));
   }
 
   const JWT_SECRET = process.env.JWT_SECRET!;
+  console.log(JWT_SECRET);
 
   try {
     const decoded = verify(token, JWT_SECRET) as {
