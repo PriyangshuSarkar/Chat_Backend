@@ -249,6 +249,7 @@ model BusinessDetails {
   Category                    Category?                     @relation(fields: [categoryId], references: [id])
   Business                    Business                      @relation(fields: [id], references: [id])
   BusinessMobileAdBannerImage BusinessMobileAdBannerImage[]
+  BusinessOperatingHours      BusinessOperatingHours[]
   BusinessWebsite             BusinessWebsite[]
   Court                       Court[]                       @relation("BusinessDetailsToCourt")
   Language                    Language[]                    @relation("BusinessDetailsToLanguage")
@@ -401,6 +402,20 @@ model BusinessMobileAdBannerImage {
   BusinessDetails   BusinessDetails? @relation(fields: [businessDetailsId], references: [id])
 }
 
+model BusinessOperatingHours {
+  id                String          @id
+  businessDetailsId String
+  dayOfWeek         DayOfWeek
+  openingTime       String
+  closingTime       String
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime
+  deletedAt         DateTime?
+  BusinessDetails   BusinessDetails @relation(fields: [businessDetailsId], references: [id])
+
+  @@unique([businessDetailsId, dayOfWeek])
+}
+
 enum SenderType {
   USER
   BUSINESS
@@ -414,4 +429,14 @@ enum BusinessType {
 enum ContactType {
   EMAIL
   PHONE
+}
+
+enum DayOfWeek {
+  SUNDAY
+  MONDAY
+  TUESDAY
+  WEDNESDAY
+  THURSDAY
+  FRIDAY
+  SATURDAY
 }
