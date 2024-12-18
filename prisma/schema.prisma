@@ -48,15 +48,17 @@ model Business {
   updatedAt                   DateTime
   deletedAt                   DateTime?
   paymentVerification         Boolean                       @default(false)
-  price                       Float?
   razorpay_order_id           String?                       @unique
+  price                       Float?
   Booking                     Booking[]
   BusinessSubscription        BusinessSubscription?         @relation(fields: [subscriptionId], references: [id])
   BusinessDetails             BusinessDetails?
   BusinessPrimaryContact      BusinessPrimaryContact[]
   BusinessSupportingDocuments BusinessSupportingDocuments[]
   Chat                        Chat[]
+  Feedback                    Feedback[]
   Review                      Review[]
+  Testimonial                 Testimonial[]
 
   @@index([averageRating])
   @@index([isBusinessVerified])
@@ -118,14 +120,14 @@ model Pincode {
 
 model Review {
   id         String    @id
-  rating     Int
+  rating     Float
   comment    String?
-  businessId String?
+  businessId String
   userId     String
   createdAt  DateTime  @default(now())
   deletedAt  DateTime?
   updatedAt  DateTime
-  Business   Business? @relation(fields: [businessId], references: [id])
+  Business   Business  @relation(fields: [businessId], references: [id])
   User       User      @relation(fields: [userId], references: [id])
 }
 
@@ -159,13 +161,15 @@ model User {
   subscriptionId      String?
   subscriptionExpire  DateTime?
   paymentVerification Boolean           @default(false)
+  razorpay_order_id   String?           @unique
   createdAt           DateTime          @default(now())
   updatedAt           DateTime
   deletedAt           DateTime?
-  razorpay_order_id   String?           @unique
   Booking             Booking[]
   Chat                Chat[]
+  Feedback            Feedback[]
   Review              Review[]
+  Testimonial         Testimonial[]
   UserSubscription    UserSubscription? @relation(fields: [subscriptionId], references: [id])
   UserAddress         UserAddress[]
   UserContact         UserContact[]
@@ -236,9 +240,8 @@ model BusinessDetails {
   description                 String?
   latitude                    Float?
   longitude                   Float?
-  degree                      String[]
+  degrees                     String[]
   gstNumber                   String?
-  categoryId                  String?
   logo                        String?
   createdAt                   DateTime                      @default(now())
   updatedAt                   DateTime
@@ -246,17 +249,15 @@ model BusinessDetails {
   BusinessAdBannerImage       BusinessAdBannerImage[]
   BusinessAddress             BusinessAddress[]
   BusinessCoverImage          BusinessCoverImage[]
-  Category                    Category?                     @relation(fields: [categoryId], references: [id])
   Business                    Business                      @relation(fields: [id], references: [id])
   BusinessMobileAdBannerImage BusinessMobileAdBannerImage[]
   BusinessOperatingHours      BusinessOperatingHours[]
   BusinessWebsite             BusinessWebsite[]
+  Category                    Category[]
   Court                       Court[]                       @relation("BusinessDetailsToCourt")
   Language                    Language[]                    @relation("BusinessDetailsToLanguage")
   Proficiency                 Proficiency[]                 @relation("BusinessDetailsToProficiency")
   Tag                         Tag[]                         @relation("BusinessDetailsToTag")
-
-  @@index([categoryId])
 }
 
 model BusinessPrimaryContact {
@@ -416,6 +417,36 @@ model BusinessOperatingHours {
   @@unique([businessDetailsId, dayOfWeek])
 }
 
+model Feedback {
+  id         String    @id
+  rating     Float
+  comment    String?
+  businessId String?
+  userId     String?
+  createdAt  DateTime  @default(now())
+  deletedAt  DateTime?
+  updatedAt  DateTime
+  Business   Business? @relation(fields: [businessId], references: [id])
+  User       User?     @relation(fields: [userId], references: [id])
+}
+
+model Testimonial {
+  id         String          @id
+  reviewId   String?         @unique
+  feedbackId String?         @unique
+  order      Int?
+  type       TestimonialType
+  rating     Float?
+  comment    String?
+  businessId String?
+  userId     String?
+  createdAt  DateTime?
+  deletedAt  DateTime?
+  updatedAt  DateTime?
+  Business   Business?       @relation(fields: [businessId], references: [id])
+  User       User?           @relation(fields: [userId], references: [id])
+}
+
 enum SenderType {
   USER
   BUSINESS
@@ -439,4 +470,9 @@ enum DayOfWeek {
   THURSDAY
   FRIDAY
   SATURDAY
+}
+
+enum TestimonialType {
+  REVIEW
+  FEEDBACK
 }
